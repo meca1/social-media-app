@@ -1,7 +1,6 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
-const express = require('express');
-const app = express();
+const app = require('express')();
 const serviceAccount = require('/Users/danielramos/Downloads/socialpe-ac5ad-firebase-adminsdk-b38yv-6005b4e6be.json');
 
 admin.initializeApp({
@@ -10,6 +9,20 @@ admin.initializeApp({
 });
 
 // admin.initializeApp()
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCizLn-_jVI5_2KqGev3qoFCxn7qQy8Eys",
+  authDomain: "socialpe-ac5ad.firebaseapp.com",
+  databaseURL: "https://socialpe-ac5ad.firebaseio.com",
+  projectId: "socialpe-ac5ad",
+  storageBucket: "socialpe-ac5ad.appspot.com",
+  messagingSenderId: "868263047082",
+  appId: "1:868263047082:web:5d6d767b908d27509bc5d3",
+  measurementId: "G-7MSPL3B29E"
+};
+
+const firebase =  require('firebase');
+firebase.initializeApp(firebaseConfig)
 
 app.get('/screams', (req, res) => {
   admin
