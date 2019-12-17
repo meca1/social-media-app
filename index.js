@@ -1,5 +1,7 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
+const express = require('express');
+const app = express();
 const serviceAccount = require('/Users/danielramos/Downloads/socialpe-ac5ad-firebase-adminsdk-b38yv-6005b4e6be.json');
 
 admin.initializeApp({
@@ -7,37 +9,34 @@ admin.initializeApp({
   databaseURL: 'https://socialpe-ac5ad.firebaseio.com'
 });
 
-// // Create and Deploy Your First Cloud Functions
-// // https://firebase.google.com/docs/functions/write-firebase-functions
-//
+// admin.initializeApp()
 
-exports.helloWorld = functions.https.onRequest((request, response) => {
-  response.send('Hello wordl!');
-});
-
-exports.getScreams = functions.https.onRequest((req, res) => {
+app.get('/screams', (req, res) => {
   admin
     .firestore()
     .collection('screams')
+    .orderBy('createAt','desc')
     .get()
     .then(data => {
       let screams = [];
       data.forEach(doc => {
-        screams.push(doc.data());
+        screams.push({
+          screamId: doc.id,
+          body: doc.data().body,
+          userHandle: doc.data().userHandle,
+          createAt: doc.data().createAt
+        });
       });
       return res.json(screams);
     })
     .catch(error => console.log(error));
 });
 
-exports.createScreams = functions.https.onRequest((req, res) => {
-  if (req.method !== 'POST') {
-    return res.status(400).json({ error: `Method  not allowed` });
-  }
+app.post('/scream',(req, res) => {
   const newScream = {
     body: req.body.body,
     userHandle: req.body.userHandle,
-    createAt: admin.firestore.Timestamp.fromDate(new Date())
+    createAt: new Date().toISOString()
   };
   admin
     .firestore()
@@ -50,3 +49,6 @@ exports.createScreams = functions.https.onRequest((req, res) => {
       res.status(500).json({ error: `something went wrong` }), console.error(error);
     });
 });
+
+// https://baseurl.com/api/
+exports.api = functions.https.onRequest(app);
