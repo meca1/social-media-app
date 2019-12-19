@@ -11,18 +11,18 @@ admin.initializeApp({
 // admin.initializeApp()
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCizLn-_jVI5_2KqGev3qoFCxn7qQy8Eys",
-  authDomain: "socialpe-ac5ad.firebaseapp.com",
-  databaseURL: "https://socialpe-ac5ad.firebaseio.com",
-  projectId: "socialpe-ac5ad",
-  storageBucket: "socialpe-ac5ad.appspot.com",
-  messagingSenderId: "868263047082",
-  appId: "1:868263047082:web:5d6d767b908d27509bc5d3",
-  measurementId: "G-7MSPL3B29E"
+  apiKey: 'AIzaSyCizLn-_jVI5_2KqGev3qoFCxn7qQy8Eys',
+  authDomain: 'socialpe-ac5ad.firebaseapp.com',
+  databaseURL: 'https://socialpe-ac5ad.firebaseio.com',
+  projectId: 'socialpe-ac5ad',
+  storageBucket: 'socialpe-ac5ad.appspot.com',
+  messagingSenderId: '868263047082',
+  appId: '1:868263047082:web:5d6d767b908d27509bc5d3',
+  measurementId: 'G-7MSPL3B29E'
 };
 
-const firebase =  require('firebase');
-firebase.initializeApp(firebaseConfig)
+const firebase = require('firebase');
+firebase.initializeApp(firebaseConfig);
 
 app.get('/screams', (req, res) => {
   admin
@@ -63,5 +63,24 @@ app.post('/scream',(req, res) => {
     });
 });
 
-// https://baseurl.com/api/
+//  Signup route
+app.post('/signup', (req, res) => {
+  const newUser = {
+    email: req.body.email,
+    password: req.body.password,
+    confirmPassword: req.body.confirmPassword,
+    handle: req.body.handle
+  };
+  // TODO validate data
+  firebase
+    .auth()
+    .createUserWithEmailAndPassword(newUser.email, newUser.password)
+    .then(data => {
+      return res.status(201).json({ message: `user  ${data.user.uid} sign up successfelly` });
+    })
+    .catch(error => {
+      console.log(error);
+      return res.status(500).json({ error: error.code });
+    });
+});
 exports.api = functions.region('us-east4').https.onRequest(app);
