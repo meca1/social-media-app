@@ -8,6 +8,7 @@ admin.initializeApp({
   databaseURL: 'https://socialpe-ac5ad.firebaseio.com'
 });
 
+const db = admin.firestore();
 // admin.initializeApp()
 
 const firebaseConfig = {
@@ -25,10 +26,8 @@ const firebase = require('firebase');
 firebase.initializeApp(firebaseConfig);
 
 app.get('/screams', (req, res) => {
-  admin
-    .firestore()
-    .collection('screams')
-    .orderBy('createAt','desc')
+  db.collection('screams')
+    .orderBy('createAt', 'desc')
     .get()
     .then(data => {
       let screams = [];
@@ -45,15 +44,13 @@ app.get('/screams', (req, res) => {
     .catch(error => console.log(error));
 });
 
-app.post('/scream',(req, res) => {
+app.post('/scream', (req, res) => {
   const newScream = {
     body: req.body.body,
     userHandle: req.body.userHandle,
     createAt: new Date().toISOString()
   };
-  admin
-    .firestore()
-    .collection('screams')
+  db.collection('screams')
     .add(newScream)
     .then(doc => {
       res.json({ message: `document ${doc.id} created successfully` });
@@ -72,15 +69,36 @@ app.post('/signup', (req, res) => {
     handle: req.body.handle
   };
   // TODO validate data
-  firebase
-    .auth()
-    .createUserWithEmailAndPassword(newUser.email, newUser.password)
-    .then(data => {
-      return res.status(201).json({ message: `user  ${data.user.uid} sign up successfelly` });
+  let token, userId;
+  db.doc(`/users/${newUser.handle}`)
+    .get()
+    .then(doc => {
+      return doc.exists
+        ? res.status(400).json({ handle: `this handle is already taken` })
+        : firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password);
     })
-    .catch(error => {
-      console.log(error);
-      return res.status(500).json({ error: error.code });
+    .then(data => {
+      userId = data.user.uid;
+      return data.user.getIdToken();
+    })
+    .then(idToken => {
+      token = idToken;
+      const userCredentials = {
+        handle: newUser.handle,
+        email: newUser.email,
+        createAt: new Date().toISOString(),
+        userId
+      };
+      db.doc(`/users/${newUser.handle}`).set(userCredentials);
+    })
+    .then(() => {
+      return res.status(201).json({ token });
+    })
+    .catch(err => {
+      console.log(err);
+      return err.code === 'auth/email-already-in-use'
+        ? res.status(400).json({ email: 'Email is already is use' })
+        : res.status(500).json({ error: err.code });
     });
 });
 exports.api = functions.region('us-east4').https.onRequest(app);
